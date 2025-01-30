@@ -1,0 +1,14 @@
+#!/bin/bash
+
+rcode=$1
+
+files=`ls *00.vel_v_ang`
+
+for file in ${files}
+do
+    strs=(${file//./ })
+    echo ${strs[0]}
+    v_image_merge ${strs[0]} ${rcode} 
+done
+
+
