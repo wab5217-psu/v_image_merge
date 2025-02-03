@@ -297,12 +297,10 @@ int main(int argc, char *argv[]){
     if(S_ISREG(statbuf.st_mode) && (strncmp(date,entry->d_name,12) == 0) && (strstr(entry->d_name,"vel_v_ang") != NULL)) {
       fprintf(stderr,"%s\n",entry->d_name);
       fp=fopen(entry->d_name,"r");
-      /* if( (stat=read_vImage(fp,&vstr)) !=0) exit(-1); */
-      if( (stat=read_vImage(fp,&vstr)) !=0) continue;
-
-      /* ang_rb_filt(&vstr); */
+      if( (stat=read_vImage(fp,&vstr)) !=0 ) continue;
 
       for( jr=0; jr<MAX_NRANG; jr++ )for( ja=0; ja<MAX_nANG; ja++ ) if( vstr.pwr[jr][ja]!=BAD_VALUE ){
+	    /* if( 10*log10(vstr.pwr[jr][ja])>80 ) fprintf(stderr,"%s %d %d %f %f\n",entry->d_name,jr,ja,vstr.vel[jr][ja],log10(vstr.pwr[jr][ja])*10); */
 	    vel[jr][ja]+=vstr.vel[jr][ja];
 	    pwr[jr][ja]+=vstr.pwr[jr][ja];
 	    wid[jr][ja]+=vstr.wid[jr][ja];
@@ -392,17 +390,19 @@ int main(int argc, char *argv[]){
   }
   
   FILE *vout;
-  char outf[32];
+  char outf[64];
   sprintf(outf,"%s.v_image",date);
-  vout=fopen(outf,"w");
+  if( (vout=fopen(outf,"w")) == NULL ){
+    fprintf(stderr,"--- FAILED TO OPEN OUTPUT FILE ---\n");
+    exit(-1);
+  }
+  
   fprintf(vout,"%s\n",date);
   fprintf(vout,"%d %d\n",vstr.nrang,MAX_nANG);
   fprintf(vout,"%s\n",rname);
   for( jr=0; jr<vstr.nrang; jr++ )for( ja=0; ja<MAX_nANG; ja++ )
-  				   fprintf(vout,"%d %d %lf %lf %lf %lf %lf %lf\n",jr,ja,vel[jr][ja],pwr[jr][ja],wid[jr][ja],rpos.lat[jr][ja],rpos.lon[jr][ja],rpos.kazm[jr][ja]);
-  /* for( jr=0; jr<MAX_NRANG; jr++ )for( ja=0; ja<MAX_nANG; ja++ ) */
-  /* 				   fprintf(vout,"%d %d %lf %lf %lf %lf %lf %lf\n",jr,ja,vel[jr][ja],pwr[jr][ja],wid[jr][ja],rpos.lat[jr][ja],rpos.lon[jr][ja],rpos.kazm[jr][ja]); */
+				    fprintf(vout,"%d %d %lf %lf %lf %lf %lf %lf\n",jr,ja,vel[jr][ja],pwr[jr][ja],wid[jr][ja],rpos.lat[jr][ja],rpos.lon[jr][ja],rpos.kazm[jr][ja]);
 
-  fclose(vout);
-  
+  fflush(vout);
+  fclose(vout);  
 }
